@@ -26,3 +26,5 @@ server:
 
 video:
   folder: videos/
+  # upper bound on a single 206 response, so "bytes=0-" cannot pull a whole file into memory
+  chunk-size-bytes: 1048576
