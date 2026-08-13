@@ -1,6 +1,7 @@
 package com.stream.video.service.impl;
 
 import com.stream.video.dto.VideoResponseDTO;
+import com.stream.video.exception.InvalidFileException;
 import com.stream.video.exception.NotFoundException;
 import com.stream.video.mapper.VideoMapper;
 import com.stream.video.model.Video;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
@@ -35,30 +37,32 @@ public class VideoServiceImpl implements VideoService {
     public VideoResponseDTO uploadVideo(String description, MultipartFile file) {
         String contentType = fileValidationService.validateAndDetect(file);
         String extension = fileValidationService.extensionFor(contentType);
-        String title = buildTitle(file.getOriginalFilename(),extension);
+        String storedName = UUID.randomUUID() + "." + extension;
 
-        Path target = Path.of(DIR).resolve(title).toAbsolutePath();
+        Path baseDir = Path.of(DIR).toAbsolutePath().normalize();
+        Path target = baseDir.resolve(storedName).normalize();
+        if (!target.startsWith(baseDir)) {
+            throw new InvalidFileException("Resolved storage path escapes the video folder");
+        }
+
         try {
-            Files.createDirectories(target.getParent());
+            Files.createDirectories(baseDir);
             file.transferTo(target);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to store file locally: " + file.getOriginalFilename(), e);
         }
 
-        log.trace("Stored file locally with title {}", title);
+        log.info("Stored upload {} as {}", file.getOriginalFilename(), storedName);
 
         Video video = new Video();
         video.setContentType(contentType);
         video.setDescription(description);
-        video.setTitle(title);
-        video.setFilePath(Path.of(DIR).resolve(title).toString());
+        video.setTitle(storedName);
+        video.setFilePath(storedName);
         video = videoRepository.save(video);
         return videoMapper.videoToResponse(video);
     }
 
-    private String buildTitle(String originalName, String extension) {
-        return originalName != null ? originalName: UUID.randomUUID() + "/" + extension;
-    }
 
     @Override
     public VideoResponseDTO getVideoById(String id) {
