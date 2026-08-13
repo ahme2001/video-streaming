@@ -28,3 +28,14 @@ video:
   folder: videos/
   # upper bound on a single 206 response, so "bytes=0-" cannot pull a whole file into memory
   chunk-size-bytes: 1048576
+
+hls:
+  output-root: hls/
+  # To save processing videos until finished and create all playlist
+  staging-root: hls-staging/
+  segment-duration-seconds: 4
+  # the only rendition for now; the ABR ladder replaces this later
+  default-rendition: 360p
+  ffmpeg-binary: ffmpeg
+  ffprobe-binary: ffprobe
+  processing-timeout: 30m
