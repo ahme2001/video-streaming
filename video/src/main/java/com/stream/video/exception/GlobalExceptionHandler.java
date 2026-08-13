@@ -1,5 +1,6 @@
 package com.stream.video.exception;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,6 +26,17 @@ public class GlobalExceptionHandler {
         errors.put("status", HttpStatus.NOT_ACCEPTABLE.toString());
         errors.put("message", e.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.NOT_ACCEPTABLE);
+    }
+
+    @ExceptionHandler(InvalidRangeException.class)
+    public ResponseEntity<Map<String,String>> handleInvalidRangeException(InvalidRangeException e) {
+        Map<String,String> errors = new HashMap<>();
+        errors.put("status", HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE.toString());
+        errors.put("message", e.getMessage());
+        // RFC 7233: a 416 tells the client the length it should have ranged against
+        return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
+                .header(HttpHeaders.CONTENT_RANGE, "bytes */" + e.getTotalLength())
+                .body(errors);
     }
 
     @ExceptionHandler(Exception.class)
