@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +42,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String,String>> handleException(Exception e) {
+        Map<String,String> errors = new HashMap<>();
+        errors.put("status", HttpStatus.BAD_REQUEST.toString());
+        errors.put("message", e.getMessage());
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<Map<String,String>> handleIOException(IOException e) {
         Map<String,String> errors = new HashMap<>();
         errors.put("status", HttpStatus.BAD_REQUEST.toString());
         errors.put("message", e.getMessage());
