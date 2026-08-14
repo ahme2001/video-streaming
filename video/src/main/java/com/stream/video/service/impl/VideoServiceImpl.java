@@ -4,8 +4,10 @@ import com.stream.video.dto.VideoResponseDTO;
 import com.stream.video.exception.InvalidFileException;
 import com.stream.video.exception.NotFoundException;
 import com.stream.video.mapper.VideoMapper;
+import com.stream.video.model.HlsStatus;
 import com.stream.video.model.Video;
 import com.stream.video.repository.VideoRepository;
+import com.stream.video.service.HlsProcessingService;
 import com.stream.video.service.VideoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +33,7 @@ public class VideoServiceImpl implements VideoService {
 
     private final VideoRepository videoRepository;
     private final VideoMapper videoMapper;
+    private final HlsProcessingService hlsProcessingService;
 
     @Override
     public VideoResponseDTO uploadVideo(String description, MultipartFile file) {
@@ -59,7 +61,9 @@ public class VideoServiceImpl implements VideoService {
         video.setDescription(description);
         video.setTitle(storedName);
         video.setFilePath(storedName);
+        video.setStatus(HlsStatus.PENDING);
         video = videoRepository.save(video);
+        hlsProcessingService.submit(video.getId());
         return videoMapper.videoToResponse(video);
     }
 
