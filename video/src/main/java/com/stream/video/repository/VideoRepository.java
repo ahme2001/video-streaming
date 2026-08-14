@@ -4,7 +4,9 @@ import com.stream.video.model.Video;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -14,11 +16,32 @@ public interface VideoRepository extends JpaRepository<Video, String> {
 
 
     @Modifying
+    @Transactional
     @Query("""
             update Video v
-               set v.status = com.stream.video.model.HlsStatus.PENDING
-             where v.status is null
-                or v.status = com.stream.video.model.HlsStatus.PROCESSING
+               set v.status = com.stream.video.model.HlsStatus.PROCESSING
+             where v.id = :id
             """)
-    int requeueUnfinished();
+    int markProcessing(@Param("id") String id);
+
+    @Modifying
+    @Transactional
+    @Query("""
+            update Video v
+               set v.status = com.stream.video.model.HlsStatus.READY,
+                   v.durationSeconds = :durationSeconds,
+                   v.hlsError = null
+             where v.id = :id
+            """)
+    int markReady(@Param("id") String id, @Param("durationSeconds") double durationSeconds);
+
+    @Modifying
+    @Transactional
+    @Query("""
+            update Video v
+               set v.status = com.stream.video.model.HlsStatus.FAILED,
+                   v.hlsError = :error
+             where v.id = :id
+            """)
+    int markFailed(@Param("id") String id, @Param("error") String error);
 }
