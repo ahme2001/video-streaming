@@ -3,7 +3,6 @@ package com.stream.video.service.impl;
 import com.stream.video.dto.ResourceResponseDTO;
 import com.stream.video.dto.VideoResponseDTO;
 import com.stream.video.dto.VideoStreamResponseDTO;
-import com.stream.video.exception.NotFoundException;
 import com.stream.video.service.VideoService;
 import com.stream.video.service.VideoStreamingService;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +32,7 @@ public class VideoStreamingServiceImpl implements VideoStreamingService {
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
     private final VideoService videoService;
-
-    @Value("${video.folder}")
-    private String DIR;
+    private final VideoFileLocator fileLocator;
 
     @Value("${video.chunk-size-bytes}")
     private long chunkSizeBytes;
@@ -71,23 +68,8 @@ public class VideoStreamingServiceImpl implements VideoStreamingService {
                 chunk.start(), end, totalLength, true);
     }
 
-    /**
-     * Resolves the stored file against the configured folder. Only the file name of
-     * the stored value is used, so a path that somehow made it into the database
-     * cannot walk out of the video folder.
-     */
     private Path resolveFile(VideoResponseDTO video) {
-        Path baseDir = Path.of(DIR).toAbsolutePath().normalize();
-        Path fileName = Path.of(video.path()).getFileName();
-        if (fileName == null) {
-            throw new NotFoundException("video file is missing for id: " + video.videoId());
-        }
-
-        Path file = baseDir.resolve(fileName).normalize();
-        if (!file.startsWith(baseDir) || !Files.isReadable(file)) {
-            throw new NotFoundException("video file is missing for id: " + video.videoId());
-        }
-        return file;
+        return fileLocator.locate(video.videoId(), video.path());
     }
 
     private String contentTypeOf(VideoResponseDTO video) {
