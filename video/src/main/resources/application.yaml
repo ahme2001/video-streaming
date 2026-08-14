@@ -34,8 +34,16 @@ hls:
   # To save processing videos until finished and create all playlist
   staging-root: hls-staging/
   segment-duration-seconds: 4
-  # the only rendition for now; the ABR ladder replaces this later
-  default-rendition: 360p
+  # the ladder a player picks from; the source is 360p, so nothing above it would add detail
+  renditions:
+    - name: 360p
+      height: 360
+      video-bitrate-kbps: 800
+      audio-bitrate-kbps: 128
+    - name: 240p
+      height: 240
+      video-bitrate-kbps: 400
+      audio-bitrate-kbps: 96
   ffmpeg-binary: ffmpeg
   ffprobe-binary: ffprobe
   processing-timeout: 30m

@@ -8,66 +8,96 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Turns one source file into a playlist and its segments.
+ * Turns one source file into a playlist per quality level
  */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class HlsPackager {
 
+    public static final String MASTER_PLAYLIST = "master.m3u8";
     public static final String PLAYLIST_NAME = "index.m3u8";
     private static final String SEGMENT_PATTERN = "segment_%05d.ts";
 
     private final HlsProperties properties;
     private final FfmpegRunner runner;
 
-
     public FfmpegRunner.Result packageVideo(Path source, Path videoDir) throws IOException, InterruptedException {
-        Path renditionDir = videoDir.resolve(properties.defaultRendition());
-        Files.createDirectories(renditionDir);
+        // ffmpeg writes into the per-rendition directories but does not create them.
+        for (HlsProperties.Rendition rendition : properties.renditions()) {
+            Files.createDirectories(videoDir.resolve(rendition.name()));
+        }
 
-        FfmpegRunner.Result result = runner.run(command(source, renditionDir), properties.processingTimeout());
+        FfmpegRunner.Result result = runner.run(command(source, videoDir), properties.processingTimeout());
         if (result.succeeded()) {
-            log.info("Packaged {} into {}", source.getFileName(), renditionDir);
+            log.info("Packaged {} into {}", source.getFileName(), videoDir);
         }
         return result;
     }
 
-    List<String> command(Path source, Path renditionDir) {
+    List<String> command(Path source, Path videoDir) {
+        List<HlsProperties.Rendition> renditions = properties.renditions();
         int segmentSeconds = properties.segmentDurationSeconds();
 
-        return List.of(
+        List<String> command = new ArrayList<>(List.of(
                 properties.ffmpegBinary(),
                 "-hide_banner",
                 // ffmpeg reads stdin for interactive keys; without this it can sit waiting on it
                 "-nostdin",
-                // without -y an existing output file makes ffmpeg ask "Overwrite? [y/N]" and block
+                // without -y an existing output makes ffmpeg ask "Overwrite? [y/N]" and block
                 "-y",
                 "-loglevel", "warning",
-                "-i", source.toString(),
+                "-i", source.toString()
+        ));
 
-                "-c:v", "libx264",
-                "-preset", "veryfast",
-                "-crf", "23",
-                "-c:a", "aac",
-                "-b:a", "128k",
+        // One video and one audio output per rendition, all decoded from the same input.
+        for (int i = 0; i < renditions.size(); i++) {
+            command.addAll(List.of("-map", "0:v:0", "-map", "0:a:0"));
+        }
 
-                // A segment must open on a keyframe, so keyframes are forced onto the segment
-                // boundaries. Expressed in seconds rather than as a GOP length in frames, which
-                // would have to be recomputed for every source frame rate.
+        command.addAll(List.of("-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac"));
+
+        for (int i = 0; i < renditions.size(); i++) {
+            HlsProperties.Rendition rendition = renditions.get(i);
+            command.addAll(List.of(
+                    // -2 keeps the width even, which h264 requires, and preserves the aspect ratio
+                    "-filter:v:" + i, "scale=-2:" + rendition.height(),
+                    "-b:v:" + i, rendition.videoBitrateKbps() + "k",
+                    "-b:a:" + i, rendition.audioBitrateKbps() + "k"
+            ));
+        }
+
+        command.addAll(List.of(
+                // A segment must open on a keyframe. Forcing them onto the same timestamps in
+                // every rendition is what lets a player switch quality at a segment boundary.
                 "-force_key_frames", "expr:gte(t,n_forced*" + segmentSeconds + ")",
+
+                "-var_stream_map", variantMap(renditions),
+                "-master_pl_name", MASTER_PLAYLIST,
 
                 "-f", "hls",
                 "-hls_time", String.valueOf(segmentSeconds),
                 // keeps every segment in the playlist and appends EXT-X-ENDLIST; the default is
                 // a live sliding window that would drop the start of the video
                 "-hls_playlist_type", "vod",
-                "-hls_segment_filename", renditionDir.resolve(SEGMENT_PATTERN).toString(),
+                // %v expands to the rendition name from the variant map
+                "-hls_segment_filename", videoDir.resolve("%v").resolve(SEGMENT_PATTERN).toString(),
 
-                renditionDir.resolve(PLAYLIST_NAME).toString()
-        );
+                videoDir.resolve("%v").resolve(PLAYLIST_NAME).toString()
+        ));
+
+        return command;
+    }
+
+    /** Tells ffmpeg which output streams belong together, and what to call each variant. */
+    private String variantMap(List<HlsProperties.Rendition> renditions) {
+        return java.util.stream.IntStream.range(0, renditions.size())
+                .mapToObj(i -> "v:" + i + ",a:" + i + ",name:" + renditions.get(i).name())
+                .collect(Collectors.joining(" "));
     }
 }
