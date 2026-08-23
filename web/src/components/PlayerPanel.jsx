@@ -28,8 +28,8 @@ export default function PlayerPanel({ video }) {
       element.load()
     }
 
-    // The first two strategies are plain URLs: the browser is the client, and the only
-    // difference between them is how the server answers.
+    // The whole-file strategy is a plain URL: the browser is the client, and the element
+    // handles its own seeking with range requests.
     if (strategyKey !== 'hls') {
       element.src = source
       return detach

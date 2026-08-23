@@ -95,7 +95,7 @@ export default function UploadPage() {
           {uploaded.status === 'READY' ? (
             <p>Packaged into HLS renditions. <Link to="/watch">Watch it</Link>.</p>
           ) : uploaded.status === 'FAILED' ? (
-            <p className="error">Packaging failed. The other two strategies still work.</p>
+            <p className="error">Packaging failed, so there are no renditions to choose from. The original file still plays.</p>
           ) : (
             <p className="muted">
               The upload finished immediately; ffmpeg is packaging it in the background.

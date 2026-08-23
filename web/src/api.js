@@ -23,24 +23,18 @@ export function uploadVideo(file, description) {
   return fetch(`${API}${query}`, { method: 'POST', body: form }).then(parse)
 }
 
-/** The three strategies this project compares: same video, three different endpoints. */
+/** The two strategies this project compares: same video, two different endpoints. */
 export const STRATEGIES = [
   {
     key: 'whole',
     label: 'Whole file',
     url: (id) => `${API}/${id}`,
-    note: 'One response carrying the entire file. Ranges are not advertised, so the browser has little to seek with.',
-  },
-  {
-    key: 'range',
-    label: 'Chunk by chunk',
-    url: (id) => `${API}/stream/${id}`,
-    note: 'Range requests answered with 206 Partial Content, capped at 1 MB each. Seeking works, but the quality is fixed.',
+    note: 'The original upload, streamed straight from S3. Range requests are answered with 206 Partial Content, so seeking works — but there is only one quality, fixed when it was uploaded.',
   },
   {
     key: 'hls',
     label: 'HLS',
     url: (id) => `${API}/hls/${id}/master.m3u8`,
-    note: 'A master playlist of 4-second segments at 360p and 240p. The player chooses the rendition and can switch mid-playback.',
+    note: 'A master playlist of 4-second segments at 360p and 240p, each segment fetched from S3. The player chooses the rendition and can switch mid-playback.',
   },
 ]
