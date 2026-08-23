@@ -1,6 +1,6 @@
 package com.stream.video.config;
 
-import com.stream.video.service.impl.FfmpegRunner;
+import com.stream.video.service.ffmpeg.FfmpegRunner;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
