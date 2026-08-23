@@ -1,24 +1,24 @@
-package com.stream.video.service.impl;
+package com.stream.video.service.video.impl;
 
+import com.stream.video.config.AwsProperties;
 import com.stream.video.dto.VideoResponseDTO;
-import com.stream.video.exception.InvalidFileException;
 import com.stream.video.exception.NotFoundException;
 import com.stream.video.mapper.VideoMapper;
 import com.stream.video.model.HlsStatus;
 import com.stream.video.model.Video;
 import com.stream.video.repository.VideoRepository;
 import com.stream.video.service.HlsProcessingService;
-import com.stream.video.service.VideoService;
+import com.stream.video.service.storage.impl.FileValidationService;
+import com.stream.video.service.storage.ObjectStorage;
+import com.stream.video.service.video.VideoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,9 +27,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class VideoServiceImpl implements VideoService {
 
-    @Value("${video.folder}")
-    private String DIR;
     private final FileValidationService fileValidationService;
+    private final ObjectStorage objectStorage;
+    private final AwsProperties awsProperties;
 
     private final VideoRepository videoRepository;
     private final VideoMapper videoMapper;
@@ -40,21 +40,15 @@ public class VideoServiceImpl implements VideoService {
         String contentType = fileValidationService.validateAndDetect(file);
         String extension = fileValidationService.extensionFor(contentType);
         String storedName = UUID.randomUUID() + "." + extension;
+        String key = awsProperties.s3().videoPrefix() + storedName;
 
-        Path baseDir = Path.of(DIR).toAbsolutePath().normalize();
-        Path target = baseDir.resolve(storedName).normalize();
-        if (!target.startsWith(baseDir)) {
-            throw new InvalidFileException("Resolved storage path escapes the video folder");
-        }
-
-        try {
-            Files.createDirectories(baseDir);
-            file.transferTo(target);
+        try (InputStream content = file.getInputStream()) {
+            objectStorage.upload(key, content, file.getSize(), contentType);
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to store file locally: " + file.getOriginalFilename(), e);
+            throw new UncheckedIOException("Failed to store file in S3: " + file.getOriginalFilename(), e);
         }
 
-        log.info("Stored upload {} as {}", file.getOriginalFilename(), storedName);
+        log.info("Stored upload {} as {}", file.getOriginalFilename(), key);
 
         Video video = new Video();
         video.setContentType(contentType);

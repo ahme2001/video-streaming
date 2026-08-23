@@ -1,4 +1,4 @@
-package com.stream.video.service;
+package com.stream.video.service.video;
 
 import com.stream.video.dto.VideoResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
