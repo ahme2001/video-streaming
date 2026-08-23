@@ -29,13 +29,6 @@ public class Video {
     @Enumerated(value = EnumType.STRING)
     private HlsStatus status;
 
-    // To save error happen while processing video.
-    // ffmpeg failures come back as several lines of stderr, which do not fit the default
-    // varchar(255): the insert would then fail while recording the failure.
     @Column(length = 2000)
     private String hlsError;
-
-    // ffprobe reports fractional seconds (130.240726 for the sample), and playlist
-    // durations are fractional too, so a whole-second type would round the video short.
-    private Double durationSeconds;
 }
