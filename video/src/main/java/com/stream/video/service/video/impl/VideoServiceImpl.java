@@ -7,7 +7,7 @@ import com.stream.video.mapper.VideoMapper;
 import com.stream.video.model.HlsStatus;
 import com.stream.video.model.Video;
 import com.stream.video.repository.VideoRepository;
-import com.stream.video.service.HlsProcessingService;
+import com.stream.video.service.hls.HlsProcessingService;
 import com.stream.video.service.storage.impl.FileValidationService;
 import com.stream.video.service.storage.ObjectStorage;
 import com.stream.video.service.video.VideoService;

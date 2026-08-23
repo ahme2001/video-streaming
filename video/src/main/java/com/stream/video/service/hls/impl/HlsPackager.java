@@ -1,4 +1,4 @@
-package com.stream.video.service.impl;
+package com.stream.video.service.hls.impl;
 
 import com.stream.video.config.HlsProperties;
 import com.stream.video.service.ffmpeg.FfmpegRunner;

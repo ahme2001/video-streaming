@@ -1,4 +1,4 @@
-package com.stream.video.service;
+package com.stream.video.service.hls;
 
 import com.stream.video.dto.ResourceResponseDTO;
 

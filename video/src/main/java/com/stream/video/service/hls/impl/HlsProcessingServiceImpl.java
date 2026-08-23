@@ -1,10 +1,10 @@
-package com.stream.video.service.impl;
+package com.stream.video.service.hls.impl;
 
 import com.stream.video.config.HlsExecutorConfig;
 import com.stream.video.exception.NotFoundException;
 import com.stream.video.model.Video;
 import com.stream.video.repository.VideoRepository;
-import com.stream.video.service.HlsProcessingService;
+import com.stream.video.service.hls.HlsProcessingService;
 import com.stream.video.service.ffmpeg.FfmpegRunner;
 import com.stream.video.service.storage.ObjectStorage;
 import com.stream.video.service.storage.impl.VideoObjectLocator;

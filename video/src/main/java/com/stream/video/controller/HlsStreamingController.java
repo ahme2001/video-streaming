@@ -1,7 +1,7 @@
 package com.stream.video.controller;
 
 import com.stream.video.dto.ResourceResponseDTO;
-import com.stream.video.service.HlsStreamingService;
+import com.stream.video.service.hls.HlsStreamingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;

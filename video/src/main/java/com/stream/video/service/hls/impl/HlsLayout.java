@@ -1,4 +1,4 @@
-package com.stream.video.service.impl;
+package com.stream.video.service.hls.impl;
 
 import com.stream.video.config.AwsProperties;
 import com.stream.video.config.HlsProperties;
