@@ -1,4 +1,4 @@
-package com.stream.video.service.impl;
+package com.stream.video.service.storage.impl;
 
 import com.stream.video.exception.InvalidFileException;
 import org.apache.tika.Tika;
