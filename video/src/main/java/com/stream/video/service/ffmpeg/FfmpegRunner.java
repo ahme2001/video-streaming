@@ -1,4 +1,4 @@
-package com.stream.video.service.impl;
+package com.stream.video.service.ffmpeg;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,21 +33,14 @@ public class FfmpegRunner {
     private static final int NO_EXIT_CODE = -1;
 
     public record Result(int exitCode, boolean timedOut, String output) {
-
         public boolean succeeded() {
             return !timedOut && exitCode == 0;
         }
-
         public String describeFailure() {
             return timedOut ? "timed out" : "exited with " + exitCode;
         }
     }
 
-    /**
-     * A non-zero exit is returned, not thrown: a video ffmpeg refuses to package is an
-     * expected outcome that becomes a FAILED row. Only being unable to start the process
-     * at all, or losing the thread, is exceptional.
-     */
     public Result run(List<String> command, Duration timeout) throws IOException, InterruptedException {
         log.debug("Running: {}", String.join(" ", command));
         Process process = new ProcessBuilder(command)
@@ -55,10 +48,6 @@ public class FfmpegRunner {
                 .start();
 
         process.getOutputStream().close();
-
-        // The output must be drained by a *different* thread than the one enforcing the
-        // timeout. Draining inline would block in read() until the process exits, which is
-        // exactly the case the timeout exists to catch, so the timeout could never fire.
         CompletableFuture<String> output = drainAsync(process);
 
         try {

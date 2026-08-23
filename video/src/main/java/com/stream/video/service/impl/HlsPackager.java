@@ -1,6 +1,7 @@
 package com.stream.video.service.impl;
 
 import com.stream.video.config.HlsProperties;
+import com.stream.video.service.ffmpeg.FfmpegRunner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Turns one source file into a playlist per quality level
+ * Turns one source file into a playlist per quality level.
  */
 @Service
 @Slf4j
@@ -22,7 +23,14 @@ public class HlsPackager {
 
     public static final String MASTER_PLAYLIST = "master.m3u8";
     public static final String PLAYLIST_NAME = "index.m3u8";
+    public static final String PLAYLIST_CONTENT_TYPE = "application/vnd.apple.mpegurl";
+    public static final String SEGMENT_CONTENT_TYPE = "video/mp2t";
+    public static final String PLAYLIST_SUFFIX = ".m3u8";
+    public static final String SEGMENT_SUFFIX = ".ts";
     private static final String SEGMENT_PATTERN = "segment_%05d.ts";
+    /** The names the pattern above can produce. */
+    public static final java.util.regex.Pattern SEGMENT_NAME =
+            java.util.regex.Pattern.compile("segment_\\d{5}\\.ts");
 
     private final HlsProperties properties;
     private final FfmpegRunner runner;
@@ -82,9 +90,12 @@ public class HlsPackager {
 
                 "-f", "hls",
                 "-hls_time", String.valueOf(segmentSeconds),
-                // keeps every segment in the playlist and appends EXT-X-ENDLIST; the default is
-                // a live sliding window that would drop the start of the video
+                // keeps every segment in the playlist and appends EXT-X-ENDLIST;
                 "-hls_playlist_type", "vod",
+
+                // Writes each segment as .ts.tmp and renames it only once it is complete,
+                "-hls_flags", "temp_file",
+
                 // %v expands to the rendition name from the variant map
                 "-hls_segment_filename", videoDir.resolve("%v").resolve(SEGMENT_PATTERN).toString(),
 
