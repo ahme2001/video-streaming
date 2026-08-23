@@ -35,12 +35,9 @@ aws:
     # Master playlist, media playlists and segments, one folder per video id
     hls-prefix: hls/
 
-video:
-  # upper bound on a single 206 response, so "bytes=0-" cannot pull a whole file into memory
-  chunk-size-bytes: 1048576
 
 hls:
-  # only the downloaded source file lands here; segments and playlists go straight to S3
+  # scratch space while packaging; each segment is uploaded to S3 and deleted as ffmpeg finishes it
   work-dir: hls-work/
   segment-duration-seconds: 4
   # the ladder a player picks from; the source is 360p, so nothing above it would add detail
