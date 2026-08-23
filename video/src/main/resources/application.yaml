@@ -24,15 +24,24 @@ spring:
 server:
   port: 8081
 
+aws:
+  region: ${AWS_REGION}
+  access-key-id: ${AWS_ACCESS_KEY_ID}
+  secret-key: ${AWS_SECRET_KEY}
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    # Uploaded originals; kept after packaging so a video can be re-packaged later
+    video-prefix: videos/
+    # Master playlist, media playlists and segments, one folder per video id
+    hls-prefix: hls/
+
 video:
-  folder: videos/
   # upper bound on a single 206 response, so "bytes=0-" cannot pull a whole file into memory
   chunk-size-bytes: 1048576
 
 hls:
-  output-root: hls/
-  # To save processing videos until finished and create all playlist
-  staging-root: hls-staging/
+  # only the downloaded source file lands here; segments and playlists go straight to S3
+  work-dir: hls-work/
   segment-duration-seconds: 4
   # the ladder a player picks from; the source is 360p, so nothing above it would add detail
   renditions:
@@ -45,5 +54,8 @@ hls:
       video-bitrate-kbps: 400
       audio-bitrate-kbps: 96
   ffmpeg-binary: ffmpeg
-  ffprobe-binary: ffprobe
   processing-timeout: 30m
+  # ffmpeg PUTs each finished segment here and the app streams it on to S3
+  ingest-base-url: http://127.0.0.1:${server.port}
+  # a 4s segment is well under a megabyte at these bitrates; this is a safety valve
+  max-ingest-bytes: 67108864
