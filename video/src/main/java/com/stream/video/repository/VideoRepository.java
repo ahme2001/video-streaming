@@ -29,11 +29,10 @@ public interface VideoRepository extends JpaRepository<Video, String> {
     @Query("""
             update Video v
                set v.status = com.stream.video.model.HlsStatus.READY,
-                   v.durationSeconds = :durationSeconds,
                    v.hlsError = null
              where v.id = :id
             """)
-    int markReady(@Param("id") String id, @Param("durationSeconds") double durationSeconds);
+    int markReady(@Param("id") String id);
 
     @Modifying
     @Transactional
