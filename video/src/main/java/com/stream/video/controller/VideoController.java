@@ -1,7 +1,7 @@
 package com.stream.video.controller;
 
 import com.stream.video.dto.VideoResponseDTO;
-import com.stream.video.service.VideoService;
+import com.stream.video.service.video.VideoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
