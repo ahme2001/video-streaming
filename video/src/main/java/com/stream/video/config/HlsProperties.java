@@ -16,17 +16,17 @@ import java.util.List;
 @ConfigurationProperties(prefix = "hls")
 public record HlsProperties(
 
-        @NotNull Path outputRoot,
-
-        @NotNull Path stagingRoot,
+        /**
+         * Scratch space: the downloaded source, and each segment for the moment between
+         * ffmpeg finishing it and it being uploaded to S3.
+         */
+        @NotNull Path workDir,
 
         @Positive int segmentDurationSeconds,
 
         @NotEmpty @Valid List<Rendition> renditions,
 
         @NotBlank String ffmpegBinary,
-
-        @NotBlank String ffprobeBinary,
 
         @NotNull Duration processingTimeout
 ) {
@@ -44,8 +44,7 @@ public record HlsProperties(
     }
 
     public HlsProperties {
-        outputRoot = absolute(outputRoot);
-        stagingRoot = absolute(stagingRoot);
+        workDir = absolute(workDir);
     }
 
     private static Path absolute(Path path) {
