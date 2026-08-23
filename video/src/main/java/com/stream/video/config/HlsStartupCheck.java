@@ -6,6 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -13,7 +17,8 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * Verifies at boot that HLS can actually run: the roots exist and both binaries are on PATH.
+ * Verifies at boot that HLS can actually run: the work directory exists,
+ * ffmpeg are on PATH, and the bucket of s3 can be reached.
  */
 @Service
 @Slf4j
@@ -23,24 +28,34 @@ public class HlsStartupCheck {
     private static final Duration VERSION_PROBE_TIMEOUT = Duration.ofSeconds(10);
 
     private final HlsProperties properties;
+    private final AwsProperties awsProperties;
     private final FfmpegRunner runner;
+    private final S3Client s3Client;
 
     @PostConstruct
     void verifyEnvironment() {
-        createRoots();
-        log.info("HLS output root: {}", properties.outputRoot());
-        log.info("HLS staging root: {}", properties.stagingRoot());
+        createWorkDir();
+        verifyBucket();
+        log.info("HLS work directory: {}", properties.workDir());
         log.info("Using {}", firstLineOf(properties.ffmpegBinary()));
-        log.info("Using {}", firstLineOf(properties.ffprobeBinary()));
     }
 
-    private void createRoots() {
+    private void createWorkDir() {
         try {
-            // The HLS muxer does not create missing parent directories, it just fails.
-            Files.createDirectories(properties.outputRoot());
-            Files.createDirectories(properties.stagingRoot());
+            Files.createDirectories(properties.workDir());
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to create the HLS directories", e);
+            throw new UncheckedIOException("Failed to create the HLS work directory", e);
+        }
+    }
+
+    private void verifyBucket() {
+        String bucket = awsProperties.s3().bucket();
+        try {
+            s3Client.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
+        } catch (SdkException e) {
+            throw new IllegalStateException(
+                    "S3 bucket '" + bucket + "' is not reachable in region " + awsProperties.region()
+                            + ". Check AWS_S3_BUCKET, AWS_REGION and the credentials.", e);
         }
     }
 
