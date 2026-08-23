@@ -1,0 +1,16 @@
+# "version" is obsolete for the Compose v2 plugin but still required by the standalone
+# docker-compose v1 binary, which is what is installed here.
+version: "3.9"
+
+services:
+  video:
+    build: .
+    image: video-streaming:latest
+    container_name: video-app
+    ports:
+      - "8081:8081"
+    # Secrets stay on the host and are handed to the container at run time; the image
+    # itself carries none, which is why env.properties is in .dockerignore.
+    env_file:
+      - env.properties
+    restart: unless-stopped

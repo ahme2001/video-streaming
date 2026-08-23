@@ -2,7 +2,9 @@ spring:
   application:
     name: video
   config:
-    import: file:env.properties
+    # optional: outside a container this file supplies the secrets, inside one they come
+    # from the environment instead, so a missing file must not stop the app from starting
+    import: optional:file:env.properties
   jpa:
     database: mysql
     show-sql: true

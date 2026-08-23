@@ -1,0 +1,17 @@
+# Build output: the image builds its own, and copying a host-built target/ in would
+# invalidate the cache on every local compile.
+target/
+
+# Secrets. These reach the container through the environment, never through the image.
+env.properties
+
+# Local scratch space; all of it is transient and recreated at runtime.
+hls-work/
+hls-staging/
+hls/
+videos/
+
+.git/
+.gitignore
+.idea/
+*.iml
