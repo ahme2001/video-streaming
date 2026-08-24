@@ -5,6 +5,9 @@ import StatusBadge from '../components/StatusBadge.jsx'
 
 const TERMINAL = ['READY', 'FAILED']
 
+// Two independent ffmpeg jobs, so the upload is only finished once both have settled.
+const settled = (video) => TERMINAL.includes(video.status) && TERMINAL.includes(video.dashStatus)
+
 export default function UploadPage() {
   const [file, setFile] = useState(null)
   const [description, setDescription] = useState('')
@@ -16,7 +19,7 @@ export default function UploadPage() {
   // Packaging happens after the response, so the upload is only half the story: poll until
   // ffmpeg has either produced the playlists or given up.
   useEffect(() => {
-    if (!uploaded || TERMINAL.includes(uploaded.status)) return
+    if (!uploaded || settled(uploaded)) return
 
     const timer = setInterval(async () => {
       try {
@@ -82,24 +85,29 @@ export default function UploadPage() {
 
       {uploaded && (
         <div className="result">
-          <h3>
-            {uploaded.title} <StatusBadge status={uploaded.status} />
-          </h3>
+          <h3>{uploaded.title}</h3>
           <dl>
             <dt>Id</dt>
             <dd><code>{uploaded.videoId}</code></dd>
             <dt>Type</dt>
             <dd>{uploaded.contentType}</dd>
+            <dt>HLS</dt>
+            <dd><StatusBadge status={uploaded.status} /></dd>
+            <dt>DASH</dt>
+            <dd><StatusBadge status={uploaded.dashStatus} /></dd>
           </dl>
 
-          {uploaded.status === 'READY' ? (
-            <p>Packaged into HLS renditions. <Link to="/watch">Watch it</Link>.</p>
-          ) : uploaded.status === 'FAILED' ? (
-            <p className="error">Packaging failed, so there are no renditions to choose from. The original file still plays.</p>
+          {uploaded.status === 'READY' || uploaded.dashStatus === 'READY' ? (
+            <p>Packaged into adaptive renditions. <Link to="/watch">Watch it</Link>.</p>
+          ) : settled(uploaded) ? (
+            <p className="error">
+              Packaging failed, so there are no renditions to choose from. The original file still plays.
+            </p>
           ) : (
             <p className="muted">
-              The upload finished immediately; ffmpeg is packaging it in the background.
-              Watching this status is the whole reason HLS needs one.
+              The upload finished immediately; ffmpeg is packaging it in the background, once
+              per protocol. Watching these statuses is the whole reason adaptive streaming
+              needs them.
             </p>
           )}
         </div>

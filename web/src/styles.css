@@ -103,6 +103,8 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .video-list .title { font-weight: 500; }
 .video-list .id { grid-column: 1 / -1; font-size: .72rem; color: var(--muted); font-family: ui-monospace, monospace; }
 
+.statuses { display: inline-flex; gap: .3rem; flex-wrap: wrap; }
+
 .strategy-buttons { display: flex; gap: .4rem; flex-wrap: wrap; }
 .strategy-buttons .active { border-color: var(--accent); background: #eef3ff; color: var(--accent); }
 

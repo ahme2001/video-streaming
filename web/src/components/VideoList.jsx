@@ -15,7 +15,10 @@ export default function VideoList({ videos, selectedId, onSelect }) {
             onClick={() => onSelect(video)}
           >
             <span className="title">{video.description || video.title}</span>
-            <StatusBadge status={video.status} />
+            <span className="statuses">
+              <StatusBadge status={video.status} label="HLS" />
+              <StatusBadge status={video.dashStatus} label="DASH" />
+            </span>
             <span className="id">{video.videoId}</span>
           </button>
         </li>

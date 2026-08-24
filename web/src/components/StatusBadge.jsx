@@ -1,4 +1,8 @@
-export default function StatusBadge({ status }) {
+export default function StatusBadge({ status, label }) {
   const value = status ?? 'NONE'
-  return <span className={`badge badge-${value.toLowerCase()}`}>{value}</span>
+  return (
+    <span className={`badge badge-${value.toLowerCase()}`}>
+      {label ? `${label}: ${value}` : value}
+    </span>
+  )
 }
