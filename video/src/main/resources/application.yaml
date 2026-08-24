@@ -18,6 +18,10 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USER}
     password: ${DATABASE_PASSWORD}
+    hikari:
+      # The hosted database I used caps at 5 connections in total, so Leaving headroom
+      # also means a SQL client or a second instance cannot lock the application out.
+      maximum-pool-size: 3
   servlet:
     multipart:
       max-file-size: 1000MB
@@ -36,12 +40,14 @@ aws:
     video-prefix: videos/
     # Master playlist, media playlists and segments, one folder per video id
     hls-prefix: hls/
+    # MPD manifest and fragmented-mp4 segments, one folder per video id
+    dash-prefix: dash/
 
 
 hls:
   # scratch space while packaging; each segment is uploaded to S3 and deleted as ffmpeg finishes it
   work-dir: hls-work/
-  segment-duration-seconds: 4
+  segment-duration-seconds: 10
   # the ladder a player picks from; the source is 360p, so nothing above it would add detail
   renditions:
     - name: 360p
@@ -54,7 +60,3 @@ hls:
       audio-bitrate-kbps: 96
   ffmpeg-binary: ffmpeg
   processing-timeout: 30m
-  # ffmpeg PUTs each finished segment here and the app streams it on to S3
-  ingest-base-url: http://127.0.0.1:${server.port}
-  # a 4s segment is well under a megabyte at these bitrates; this is a safety valve
-  max-ingest-bytes: 67108864

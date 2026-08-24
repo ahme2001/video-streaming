@@ -31,12 +31,16 @@ public record AwsProperties(
             @NotBlank String videoPrefix,
 
             /** Where packaged playlists and segments are stored, e.g. {@code hls/}. */
-            @NotBlank String hlsPrefix
+            @NotBlank String hlsPrefix,
+
+            /** Where the MPD and its fragmented-mp4 segments are stored, e.g. {@code dash/}. */
+            @NotBlank String dashPrefix
     ) {
 
         public S3 {
             videoPrefix = asPrefix(videoPrefix);
             hlsPrefix = asPrefix(hlsPrefix);
+            dashPrefix = asPrefix(dashPrefix);
         }
 
         /**

@@ -4,9 +4,10 @@ import com.stream.video.config.AwsProperties;
 import com.stream.video.dto.VideoResponseDTO;
 import com.stream.video.exception.NotFoundException;
 import com.stream.video.mapper.VideoMapper;
-import com.stream.video.model.HlsStatus;
+import com.stream.video.model.PackagingStatus;
 import com.stream.video.model.Video;
 import com.stream.video.repository.VideoRepository;
+import com.stream.video.service.dash.DashProcessingService;
 import com.stream.video.service.hls.HlsProcessingService;
 import com.stream.video.service.storage.impl.FileValidationService;
 import com.stream.video.service.storage.ObjectStorage;
@@ -34,6 +35,7 @@ public class VideoServiceImpl implements VideoService {
     private final VideoRepository videoRepository;
     private final VideoMapper videoMapper;
     private final HlsProcessingService hlsProcessingService;
+    private final DashProcessingService dashProcessingService;
 
     @Override
     public VideoResponseDTO uploadVideo(String description, MultipartFile file) {
@@ -55,9 +57,13 @@ public class VideoServiceImpl implements VideoService {
         video.setDescription(description);
         video.setTitle(storedName);
         video.setFilePath(storedName);
-        video.setStatus(HlsStatus.PENDING);
+        video.setStatus(PackagingStatus.PENDING);
+        video.setDashStatus(PackagingStatus.PENDING);
         video = videoRepository.save(video);
+        // Both packagings are queued on the same single-threaded executor, so they run one
+        // after the other rather than fighting over the CPU.
         hlsProcessingService.submit(video.getId());
+        dashProcessingService.submit(video.getId());
         return videoMapper.videoToResponse(video);
     }
 

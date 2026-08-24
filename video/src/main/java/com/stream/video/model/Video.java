@@ -26,9 +26,20 @@ public class Video {
 
     private String filePath;
 
+    /** HLS packaging state. Kept as "status" so existing rows and clients still read it. */
     @Enumerated(value = EnumType.STRING)
-    private HlsStatus status;
+    private PackagingStatus status;
 
     @Column(length = 2000)
     private String hlsError;
+
+    /**
+     * DASH packaging state, tracked separately: the two are packaged by independent jobs,
+     * so one protocol being unavailable says nothing about the other.
+     */
+    @Enumerated(value = EnumType.STRING)
+    private PackagingStatus dashStatus;
+
+    @Column(length = 2000)
+    private String dashError;
 }

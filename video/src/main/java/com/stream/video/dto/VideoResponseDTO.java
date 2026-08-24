@@ -6,5 +6,6 @@ public record VideoResponseDTO(
         String description,
         String contentType,
         String path,
-        String status
+        String status,
+        String dashStatus
 ) {}

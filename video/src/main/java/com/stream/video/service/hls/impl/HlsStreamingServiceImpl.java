@@ -2,9 +2,9 @@ package com.stream.video.service.hls.impl;
 
 import com.stream.video.config.HlsProperties;
 import com.stream.video.dto.ResourceResponseDTO;
-import com.stream.video.exception.HlsNotReadyException;
+import com.stream.video.exception.PackagingNotReadyException;
 import com.stream.video.exception.NotFoundException;
-import com.stream.video.model.HlsStatus;
+import com.stream.video.model.PackagingStatus;
 import com.stream.video.model.Video;
 import com.stream.video.repository.VideoRepository;
 import com.stream.video.service.hls.HlsProcessingService;
@@ -67,10 +67,10 @@ public class HlsStreamingServiceImpl implements HlsStreamingService {
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new NotFoundException("video with following id not found: " + videoId));
 
-        if (video.getStatus() != HlsStatus.READY) {
+        if (video.getStatus() != PackagingStatus.READY) {
             String status = video.getStatus() == null ? "NONE" : video.getStatus().name();
             hlsProcessingService.submit(videoId);
-            throw new HlsNotReadyException(
+            throw new PackagingNotReadyException(
                     "HLS output for " + videoId + " is not available, status is " + status, status);
         }
     }

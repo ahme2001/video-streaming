@@ -1,6 +1,6 @@
 package com.stream.video.model;
 
-public enum HlsStatus {
+public enum PackagingStatus {
     PENDING,
     PROCESSING,
     READY,
