@@ -40,11 +40,11 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
-    @ExceptionHandler(HlsNotReadyException.class)
-    public ResponseEntity<Map<String,String>> handleHlsNotReadyException(HlsNotReadyException e) {
+    @ExceptionHandler(PackagingNotReadyException.class)
+    public ResponseEntity<Map<String,String>> handleHlsNotReadyException(PackagingNotReadyException e) {
         Map<String,String> errors = new HashMap<>();
         errors.put("status", HttpStatus.CONFLICT.toString());
-        errors.put("hlsStatus", e.getStatus());
+        errors.put("packagingStatus", e.getStatus());
         errors.put("message", e.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.CONFLICT);
     }
