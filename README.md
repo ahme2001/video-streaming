@@ -8,6 +8,7 @@ A Spring Boot backend accepts an upload, stores it in S3, and runs `ffmpeg` to p
 
 ## Table of contents
 
+- [Screenshots](#screenshots)
 - [The three strategies](#the-three-strategies)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
@@ -21,6 +22,26 @@ A Spring Boot backend accepts an upload, stores it in S3, and runs `ffmpeg` to p
 - [Deployment](#deployment)
 - [Operational notes and gotchas](#operational-notes-and-gotchas)
 - [Known limitations and next steps](#known-limitations-and-next-steps)
+
+---
+
+## Screenshots
+
+### Video upload
+
+![Video upload page](assets/upload_video.png)
+
+### Whole-file playback
+
+![Whole-file video playback test](assets/WHOLE_VIDEO_TEST.png)
+
+### HLS playback
+
+![HLS video streaming test](assets/HLS_TEST.png)
+
+### MPEG-DASH playback
+
+![MPEG-DASH video streaming test](assets/DASH_TEST.png)
 
 ---
 
@@ -98,6 +119,7 @@ The bucket is **private**. Every playlist, manifest and segment is proxied throu
 
 ```
 video-streaming/
+├── assets/                      # Project screenshots used in this README
 ├── video/                       # Spring Boot backend
 │   ├── Dockerfile
 │   ├── docker-compose.yml
